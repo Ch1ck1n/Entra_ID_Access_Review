@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from azure.identity.aio import ClientSecretCredential
 from msgraph import GraphServiceClient
 from msgraph.generated.users.users_request_builder import UsersRequestBuilder
-from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path.as_posix())
@@ -51,7 +50,7 @@ async def main():
                 })
 
         print(f"Success: wrote {len(users_output)} users to reports/users.json")
-        
+
         os.makedirs("reports", exist_ok=True)
 
         await credential.close()
