@@ -7,6 +7,7 @@ from azure.identity.aio import ClientSecretCredential
 from msgraph import GraphServiceClient
 from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
+from msgraph.generated.directory_roles.directory_roles_request_builder import DirectoryRolesRequestBuilder
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path.as_posix())
@@ -77,8 +78,33 @@ async def main():
         with open("reports/groups.json", "w", encoding="utf-8") as f:
             json.dump(groups_output, f, indent=2)
         
+                # Privileged directory roles
+        role_query_params = DirectoryRolesRequestBuilder.DirectoryRolesRequestBuilderGetQueryParameters(
+            select=["id", "displayName", "roleTemplateId"],
+        )
+
+        role_request_config = DirectoryRolesRequestBuilder.DirectoryRolesRequestBuilderGetRequestConfiguration(
+            query_parameters=role_query_params
+        )
+
+        role_result = await client.directory_roles.get(request_configuration=role_request_config)
+
+        privileged_roles_output = []
+        if role_result and role_result.value:
+            for role in role_result.value:
+                if role.role_template_id:  # Only active roles
+                    privileged_roles_output.append({
+                        "id": role.id,
+                        "displayName": role.display_name,
+                        "roleTemplateId": role.role_template_id
+                    })
+
+        with open("reports/privileged_roles.json", "w", encoding="utf-8") as f:
+            json.dump(privileged_roles_output, f, indent=2)
+
         print(f"Success: wrote {len(users_output)} users to reports/users.json")
         print(f"Success: wrote {len(groups_output)} groups to reports/groups.json")
+        print(f"Success: wrote {len(privileged_roles_output)} privileged roles to reports/privileged_roles.json")
 
         os.makedirs("reports", exist_ok=True)
 
