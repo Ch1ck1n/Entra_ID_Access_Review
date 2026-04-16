@@ -1,0 +1,14 @@
+[
+  {
+    "id": "0bfbecc3-cac0-420b-afee-e6c6318f0e72",
+    "displayName": "Marketing",
+    "mail": null,
+    "securityEnabled": true
+  },
+  {
+    "id": "6d90ab3e-16ba-454b-bcb5-a2b7b5e8e234",
+    "displayName": "Northwest Sales",
+    "mail": "NorthwestSales@tbphanhotmail.onmicrosoft.com",
+    "securityEnabled": true
+  }
+]
