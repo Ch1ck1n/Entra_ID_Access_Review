@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from azure.identity.aio import ClientSecretCredential
 from msgraph import GraphServiceClient
 from msgraph.generated.users.users_request_builder import UsersRequestBuilder
+from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path.as_posix())
@@ -49,7 +50,35 @@ async def main():
                     "accountEnabled": user.account_enabled
                 })
 
+        with open("reports/users.json", "w", encoding="utf-8") as f:
+            json.dump(users_output, f, indent=2)
+
+        group_query_params = GroupsRequestBuilder.GroupsRequestBuilderGetQueryParameters(
+            select=["id", "displayName", "mail", "securityEnabled"],
+            top=5
+        )
+
+        group_request_config = GroupsRequestBuilder.GroupsRequestBuilderGetRequestConfiguration(
+            query_parameters=group_query_params
+        )
+
+        group_result = await client.groups.get(request_configuration=group_request_config)
+
+        groups_output = []
+        if group_result and group_result.value:
+            for group in group_result.value:
+                groups_output.append({
+                    "id": group.id,
+                    "displayName": group.display_name,
+                    "mail": group.mail,
+                    "securityEnabled": group.security_enabled
+                })
+
+        with open("reports/groups.json", "w", encoding="utf-8") as f:
+            json.dump(groups_output, f, indent=2)
+        
         print(f"Success: wrote {len(users_output)} users to reports/users.json")
+        print(f"Success: wrote {len(groups_output)} groups to reports/groups.json")
 
         os.makedirs("reports", exist_ok=True)
 
