@@ -8,6 +8,7 @@ from msgraph import GraphServiceClient
 from msgraph.generated.users.users_request_builder import UsersRequestBuilder
 from msgraph.generated.groups.groups_request_builder import GroupsRequestBuilder
 from msgraph.generated.directory_roles.directory_roles_request_builder import DirectoryRolesRequestBuilder
+#from msgraph.generated.directoryobjects.get_by_ids.get_by_ids_post_request_body import GetByIdsPostRequestBody
 
 env_path = Path(__file__).resolve().parent.parent / ".env"
 load_dotenv(dotenv_path=env_path.as_posix())
@@ -98,6 +99,41 @@ async def main():
                         "displayName": role.display_name,
                         "roleTemplateId": role.role_template_id
                     })
+#                    member_ids = set()
+#
+#                    for role in privileged_roles_output:
+#                        for member in role["members"]:
+#                            if member.get("id"):
+#                                member_ids.add(member["id"])
+#                            resolved_objects = {}
+#
+#                    if member_ids:
+#                        request_body = GetByIdsPostRequestBody(
+#                            ids=list(member_ids),
+#                            types=["user", "group", "servicePrincipal", "device"]
+#                        )
+#
+#                    directory_objects = await client.directory_objects.get_by_ids.post(request_body)
+#
+#                    if directory_objects and directory_objects.value:
+#                        for obj in directory_objects.value:
+#                            resolved_objects[obj.id] = {
+#                                "id": obj.id,
+#                                "type": obj.odata_type
+#                            }
+#                    for role in privileged_roles_output:
+#                        enriched_members = []
+#
+#                        for member in role["members"]:
+#                            resolved = resolved_objects.get(member["id"], {})
+#
+#                            enriched_members.append({
+#                                "id": member["id"],
+#                                "type": resolved.get("type", member.get("type")),
+#                                "displayName": getattr(type("obj", (), resolved), "display_name", None)
+#                            })
+#
+#                            role["members"] = enriched_members
 
         with open("reports/privileged_roles.json", "w", encoding="utf-8") as f:
             json.dump(privileged_roles_output, f, indent=2)
