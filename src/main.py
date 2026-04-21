@@ -135,9 +135,66 @@ async def main():
 #
 #                            role["members"] = enriched_members
 
-        with open("reports/privileged_roles.json", "w", encoding="utf-8") as f:
-            json.dump(privileged_roles_output, f, indent=2)
+        risk_findings = []
 
+        member_role_map = {}
+
+        for role in privileged_roles_output:
+            role_name = role.get("displayName", "Unknown Role")
+            members = role.get("members", [])
+
+            member_count = len(members)
+
+            if role_name == "Global Administrator" and member_count > 5:
+                risk_findings.append({
+                    "severity": "High",
+                    "riskType": "TooManyGlobalAdmins",
+                    "role": role_name,
+                    "memberCount": member_count,
+                    "reason": "Microsoft recommends fewer than 5 Global Administrators."
+                })
+
+            if member_count > 10:
+                risk_findings.append({
+                    "severity": "Medium",
+                    "riskType": "TooManyPrivilegedMembers",
+                    "role": role_name,
+                    "memberCount": member_count,
+                    "reason": "Microsoft recommends limiting the number of privileged role assignments."
+                })
+
+            if member_count == 0:
+                risk_findings.append({
+                    "severity": "Info",
+                    "riskType": "EmptyPrivilegedRole",
+                    "role": role_name,
+                    "memberCount": member_count,
+                    "reason": "Role has no active members."
+                })
+
+            for member in members:
+                member_id = member.get("id")
+                if member_id:
+                    if member_id not in member_role_map:
+                        member_role_map[member_id] = []
+
+                    member_role_map[member_id].append(role_name)
+
+        for member_id, roles in member_role_map.items():
+            if len(roles) > 1:
+                risk_findings.append({
+                    "severity": "Medium",
+                    "riskType": "MultiplePrivilegedRoles",
+                    "memberId": member_id,
+                    "roleCount": len(roles),
+                    "roles": roles,
+                    "reason": "Identity is assigned to multiple privileged roles."
+                })
+
+        with open("reports/risk_findings.json", "w", encoding="utf-8") as f:
+            json.dump(risk_findings, f, indent=2)
+
+        print(f"Success: wrote {len(risk_findings)} findings to reports/risk_findings.json")
         print(f"Success: wrote {len(users_output)} users to reports/users.json")
         print(f"Success: wrote {len(groups_output)} groups to reports/groups.json")
         print(f"Success: wrote {len(privileged_roles_output)} privileged roles to reports/privileged_roles.json")
